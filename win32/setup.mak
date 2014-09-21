@@ -44,6 +44,8 @@ prefix = $(prefix:\=/)
 !if defined(libdir_basename)
 libdir_basename = $(libdir_basename)
 !endif
+EXTS = $(EXTS)
+EXTARGS = $(EXTARGS)
 EXTSTATIC = $(EXTSTATIC)
 !if defined(RDOCTARGET)
 RDOCTARGET = $(RDOCTARGET)

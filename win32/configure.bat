@@ -1,6 +1,7 @@
 @echo off
 @setlocal disabledelayedexpansion
 set witharg=
+set withoutarg=
 
 for %%I in (%0) do if /%%~dpI/ == /%CD%\/ (
     echo don't run in win32 directory.
@@ -44,8 +45,8 @@ if "%1" == "--with-ntver" goto :ntver
 if "%1" == "--with-libdir" goto :libdir
 if "%1" == "--with-git" goto :git
 if "%1" == "--without-git" goto :nogit
-if "%1" == "--without-ext" goto :witharg
-if "%1" == "--without-extensions" goto :witharg
+if "%1" == "--without-ext" goto :withoutarg
+if "%1" == "--without-extensions" goto :withoutarg
 if "%opt:~0,10%" == "--without-" goto :withoutarg
 if "%opt:~0,7%" == "--with-" goto :witharg
 if "%1" == "-h" goto :help
@@ -206,7 +207,9 @@ goto :loop ;
   shift
 goto :loop ;
 :withoutarg
-  echo>>confargs.tmp  %1 \
+  set withoutarg=%withoutarg% %1="%~2"
+  echo>>confargs.tmp  %1="%~2"  \
+  shift
   shift
 goto :loop ;
 :help
@@ -229,6 +232,7 @@ goto :loop ;
   del ~tmp~.mak
 goto :exit
 :end
+echo.>> ~tmp~.mak 	"EXTARGS=%withoutarg%" \
 echo>> ~tmp~.mak 	WIN32DIR=$(@D:\=/)
 echo.>>confargs.tmp
 echo>confargs.c #define $ $$ //
