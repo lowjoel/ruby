@@ -153,7 +153,7 @@ SCRIPT_ARGS   =	--dest-dir="$(DESTDIR)" \
 		--extout="$(EXTOUT)" \
 		--mflags="$(MFLAGS)" \
 		--make-flags="$(MAKEFLAGS)"
-EXTMK_ARGS    =	$(SCRIPT_ARGS) --extension $(EXTS) --extstatic $(EXTSTATIC) \
+EXTMK_ARGS    =	$(SCRIPT_ARGS) $(EXTARGS) --extension $(EXTS) --extstatic $(EXTSTATIC) \
 		--make-flags="V=$(V) MINIRUBY='$(MINIRUBY)'" \
 		--gnumake=$(gnumake) --extflags="$(EXTLDFLAGS)" \
 		--
