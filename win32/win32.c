@@ -658,6 +658,23 @@ init_env(void)
 #undef set_env_val
 }
 
+typedef VOID (WINAPI *GetSystemTimeAsPreciseAsPossible_t)(LPFILETIME lpSystemTimeAsFileTime);
+static GetSystemTimeAsPreciseAsPossible_t GetSystemTimeAsPreciseAsPossible = NULL;
+
+/* License: Ruby's */
+static void
+init_func(void)
+{
+    if (!GetSystemTimeAsPreciseAsPossible) {
+        GetSystemTimeAsPreciseAsPossible =
+            (GetSystemTimeAsPreciseAsPossible_t)get_proc_address("kernel32", "GetSystemTimePreciseAsFileTime", NULL);
+        if (!GetSystemTimeAsPreciseAsPossible) {
+            GetSystemTimeAsPreciseAsPossible =
+                (GetSystemTimeAsPreciseAsPossible_t)GetSystemTimeAsFileTime;
+        }
+    }
+}
+
 static void init_stdhandle(void);
 
 #if RUBY_MSVCRT_VERSION >= 80
@@ -854,6 +871,8 @@ rb_w32_sysinit(int *argc, char ***argv)
     tzset();
 
     init_env();
+
+    init_func();
 
     init_stdhandle();
 
@@ -4581,7 +4600,7 @@ gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     FILETIME ft;
 
-    GetSystemTimeAsFileTime(&ft);
+    GetSystemTimeAsPreciseAsPossible(&ft);
     filetime_to_timeval(&ft, tv);
 
     return 0;
