@@ -287,7 +287,7 @@ end if defined?(::Readline) && defined?(::Readline::HISTORY) &&
   (
    begin
      Readline::HISTORY.clear
-   rescue NotImplementedError
+   rescue NotImplementedError, NoMethodError
      false
    end
    )

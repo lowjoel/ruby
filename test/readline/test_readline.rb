@@ -617,4 +617,4 @@ class TestReadline < Test::Unit::TestCase
 SRC
     return true
   end
-end if defined?(::Readline)
+end if defined?(::Readline) and !(RUBY_PLATFORM =~ /mswin|mingw|windows/)
