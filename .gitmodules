@@ -1,0 +1,3 @@
+[submodule "lib/rb-readline"]
+	path = lib/rb-readline
+	url = https://github.com/luislavena/rb-readline.git

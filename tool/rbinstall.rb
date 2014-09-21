@@ -565,6 +565,7 @@ module Gem
   class Specification < OpenStruct
     def initialize(*)
       super
+      self.rdoc_options ||= []
       yield(self) if defined?(yield)
       self.executables ||= []
     end
@@ -603,6 +604,10 @@ end
     def self.unresolved_deps
       []
     end
+
+    def add_development_dependency(dep, ver = nil)
+    end
+
   end
 end
 
