@@ -582,6 +582,8 @@ init_env(void)
 
 typedef BOOL (WINAPI *cancel_io_t)(HANDLE);
 static cancel_io_t cancel_io = NULL;
+typedef VOID (WINAPI *GetSystemTimeAsPreciseAsPossible_t)(LPFILETIME lpSystemTimeAsFileTime);
+static GetSystemTimeAsPreciseAsPossible_t GetSystemTimeAsPreciseAsPossible = NULL;
 
 /* License: Ruby's */
 static void
@@ -589,6 +591,15 @@ init_func(void)
 {
     if (!cancel_io)
 	cancel_io = (cancel_io_t)get_proc_address("kernel32", "CancelIo", NULL);
+
+    if (!GetSystemTimeAsPreciseAsPossible) {
+        GetSystemTimeAsPreciseAsPossible =
+            (GetSystemTimeAsPreciseAsPossible_t)get_proc_address("kernel32", "GetSystemTimePreciseAsFileTime", NULL);
+        if (!GetSystemTimeAsPreciseAsPossible) {
+            GetSystemTimeAsPreciseAsPossible =
+                (GetSystemTimeAsPreciseAsPossible_t)GetSystemTimeAsFileTime;
+        }
+    }
 }
 
 static void init_stdhandle(void);
@@ -4436,7 +4447,7 @@ gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     FILETIME ft;
 
-    GetSystemTimeAsFileTime(&ft);
+    GetSystemTimeAsPreciseAsPossible(&ft);
     filetime_to_timeval(&ft, tv);
 
     return 0;
