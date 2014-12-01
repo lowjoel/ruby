@@ -37,6 +37,8 @@ elsif have_header "windows.h"
   %w{ LoadLibrary FreeLibrary GetProcAddress }.each do |func|
     abort "missing function #{func}" unless have_func(func)
   end
+
+  $defs << '-DFFI_BUILDING'
 end
 
 have_const('FFI_STDCALL', 'ffi.h') || have_const('FFI_STDCALL', 'ffi/ffi.h')
