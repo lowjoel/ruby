@@ -49,11 +49,11 @@ class Gem::Command
   # Arguments used when building gems
 
   def self.build_args
-    @build_args ||= []
+    Thread.current[:gem_command_build_args] ||= []
   end
 
   def self.build_args=(value)
-    @build_args = value
+    Thread.current[:gem_command_build_args] = value
   end
 
   def self.common_options
