@@ -1017,6 +1017,26 @@ $(STUBPROGRAM):	rubystub.$(OBJEXT) $(LIBRUBY) $(LIBRUBY_SO) $(RUBY_INSTALL_NAME)
 		$(Q) $(LDSHARED_2)
 !endif
 
+LIBRUBYDEF = $(LIBRUBY_A:.lib=.def.lib)
+rubydefobjdir = librubydef
+!if [echo $(OBJS) $(INITOBJS) > librubydef.in && \
+	echo.RUBYDEF_OBJS = \>librubydef.mk&& \
+	sed -r "s/(\b(\w|\.|\/)+\b)/$(rubydefobjdir)\/\1 \\\n/g" librubydef.in >> librubydef.mk]
+!endif
+!include librubydef.mk
+$(rubydefobjdir):
+		mkdir $(rubydefobjdir)
+		mkdir $(rubydefobjdir)\win32
+		mkdir $(rubydefobjdir)\enc
+		mkdir $(rubydefobjdir)\enc\trans
+
+$(rubydefobjdir)/$(NEWLINE_C): $(NEWLINE_C)
+		copy $(NEWLINE_C:/=\) $(rubydefobjdir)\$(NEWLINE_C:/=\)
+
+$(LIBRUBYDEF):	$(rubydefobjdir) $(rubydefobjdir)/$(NEWLINE_C) $(RUBYDEF_OBJS)
+		$(ECHO) building import-library $(@:\=/)
+		$(Q) $(AR) $(ARFLAGS)$@ $(RUBYDEF_OBJS)
+
 $(LIBRUBY_A):	$(OBJS) $(INITOBJS)
 		$(ECHO) linking static-library $(@:\=/)
 		$(Q) $(AR) $(ARFLAGS)$@ $(OBJS) $(INITOBJS)
@@ -1038,10 +1058,10 @@ $(LIBRUBY_SO):	$(LIBRUBY_A) $(DLDOBJS) $(RUBYDEF) $(RUBY_SO_NAME).res
 		$(Q) $(LDSHARED_2)
 # | findstr -v -c:LNK4049 -c:LNK4217
 
-$(RUBYDEF):	$(LIBRUBY_A) $(PREP)
+$(RUBYDEF):	$(LIBRUBY_A) $(LIBRUBYDEF) $(PREP)
 		$(ECHO) generating $(@:\=/)
 		$(Q) $(MINIRUBY) $(srcdir)/win32/mkexports.rb \
-		  -output=$@ -arch=$(ARCH) $(LIBRUBY_A)
+		  -output=$@ -arch=$(ARCH) $(LIBRUBYDEF)
 
 {$(win_srcdir)}.def.lib:
 		$(Q) $(AR) $(ARFLAGS)$@ -def:$<
@@ -1050,6 +1070,7 @@ clean-local::
 		$(Q)$(RM) $(WINMAINOBJ) ext\extinit.c ext\extinit.$(OBJEXT) ext\vc*.pdb miniruby.lib
 		$(Q)$(RM) $(RUBY_INSTALL_NAME).res $(RUBYW_INSTALL_NAME).res $(RUBY_SO_NAME).res
 		$(Q)$(RM) miniruby.rc $(RUBY_INSTALL_NAME).rc $(RUBYW_INSTALL_NAME).rc $(RUBY_SO_NAME).rc
+		$(Q)$(RM) $(RUBYDEF_OBJS) $(LIBRUBYDEF)
 		$(Q)$(RM) *.map *.pdb *.ilk *.exp $(RUBYDEF) ext\ripper\y.output
 
 distclean-local::
@@ -1113,6 +1134,22 @@ $(ruby_pc): $(RBCONFIG)
 .c.obj:
 	$(ECHO) compiling $(<:\=/)
 	$(Q) $(CC) $(CFLAGS) $(XCFLAGS) $(CPPFLAGS) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+{$(srcdir)/enc}.c{$(rubydefobjdir)/enc}.obj:
+	$(ECHO) compiling $(<:\=/)
+	$(Q) $(CC) $(CFLAGS:/GL=) $(XCFLAGS) $(CPPFLAGS:/GL=) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+{$(srcdir)/missing}.c{$(rubydefobjdir)}.obj:
+	$(ECHO) compiling $(<:\=/)
+	$(Q) $(CC) $(CFLAGS:/GL=) $(XCFLAGS) $(CPPFLAGS:/GL=) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+{$(win_srcdir)}.c{$(rubydefobjdir)/win32}.obj:
+	$(ECHO) compiling $(<:\=/)
+	$(Q) $(CC) $(CFLAGS:/GL=) $(XCFLAGS) $(CPPFLAGS:/GL=) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+{$(srcdir)}.c{$(rubydefobjdir)}.obj:
+	$(ECHO) compiling $(<:\=/)
+	$(Q) $(CC) $(CFLAGS:/GL=) $(XCFLAGS) $(CPPFLAGS:/GL=) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+.c{$(rubydefobjdir)}.obj:
+	$(ECHO) compiling $(<:\=/)
+	$(Q) $(CC) $(CFLAGS:/GL=) $(XCFLAGS) $(CPPFLAGS:/GL=) $(COUTFLAG)$@ -c $(CSRCFLAG)$(<:\=/)
+$(rubydefobjdir)/loadpath.$(OBJEXT): {$(VPATH)}verconf.h
 
 {$(srcdir)/missing}.c.asm:
 	$(ECHO) translating $(<:\=/)
