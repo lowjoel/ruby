@@ -417,6 +417,31 @@ fnmatch(
 	return fnmatch_helper(&p, &s, flags, enc);
 }
 
+struct fnmatch_brace_args {
+    const char* string;
+    int flags;
+};
+
+static int
+fnmatch_with_brace_callback(const char *pattern, VALUE val, void *enc)
+{
+    struct fnmatch_brace_args *arg = (struct fnmatch_brace_args *)val;
+    return fnmatch(pattern, enc, arg->string, arg->flags) == 0;
+}
+
+static int
+fnmatch_with_brace(
+    const char *pattern,
+    rb_encoding *enc,
+    const char *string,
+    int flags)
+{
+    struct fnmatch_brace_args args;
+    args.string = string;
+    args.flags = flags;
+    return ruby_brace_expand(pattern, flags, fnmatch_with_brace_callback, (VALUE)&args, enc) > 0 ? 0 : FNM_NOMATCH;
+}
+
 VALUE rb_cDir;
 
 struct dir_data {
@@ -1220,6 +1245,7 @@ sys_enc_warning_in(const char *func, const char *mesg, rb_encoding *enc)
 }
 
 #define GLOB_VERBOSE	(1U << (sizeof(int) * CHAR_BIT - 1))
+#define GLOB_PARTIAL_EXPAND (1U << (sizeof(int) * CHAR_BIT - 2))
 #define sys_warning(val, enc) \
     ((flags & GLOB_VERBOSE) ? sys_enc_warning_in(RUBY_FUNCTION_NAME_STRING, (val), (enc)) :(void)0)
 
@@ -1323,6 +1349,7 @@ has_magic(const char *p, const char *pend, int flags, rb_encoding *enc)
 	  case '*':
 	  case '?':
 	  case '[':
+	  case '{':
 	    return MAGICAL;
 
 	  case '\\':
@@ -1708,10 +1735,10 @@ glob_func_caller(VALUE val)
 static inline int
 dirent_match(const char *pat, rb_encoding *enc, const char *name, const struct dirent *dp, int flags)
 {
-    if (fnmatch(pat, enc, name, flags) == 0) return 1;
+    if (fnmatch_with_brace(pat, enc, name, flags) == 0) return 1;
 #ifdef _WIN32
     if (dp->d_altname && (flags & FNM_SHORTNAME)) {
-	if (fnmatch(pat, enc, dp->d_altname, flags) == 0) return 1;
+	if (fnmatch_with_brace(pat, enc, dp->d_altname, flags) == 0) return 1;
     }
 #endif
     return 0;
@@ -1965,7 +1992,7 @@ glob_helper(
 		}
 		*new_end++ = (*cur)->next;
 		for (cur2 = cur + 1; cur2 < copy_end; ++cur2) {
-		    if (*cur2 && fnmatch((*cur2)->str, enc, name, flags) == 0) {
+		    if (*cur2 && fnmatch_with_brace((*cur2)->str, enc, name, flags) == 0) {
 			*new_end++ = (*cur2)->next;
 			*cur2 = 0;
 		    }
@@ -2011,6 +2038,7 @@ ruby_glob0(const char *path, int flags, ruby_glob_func *func, VALUE arg, rb_enco
 
     start = root = path;
     flags |= FNM_SYSCASE;
+    flags &= ~GLOB_PARTIAL_EXPAND;
 #if defined DOSISH
     root = rb_enc_path_skip_prefix(root, root + strlen(root), enc);
 #endif
@@ -2088,19 +2116,27 @@ ruby_brace_expand(const char *str, int flags, ruby_glob_func *func, VALUE arg,
 		  rb_encoding *enc)
 {
     const int escape = !(flags & FNM_NOESCAPE);
+    const int partial_expand = flags & GLOB_PARTIAL_EXPAND;
     const char *p = str;
     const char *pend = p + strlen(p);
     const char *s = p;
     const char *lbrace = 0, *rbrace = 0;
-    int nest = 0, status = 0;
+    int nest = 0, status = 0, has_dirsep = 0;
 
     while (*p) {
 	if (*p == '{' && nest++ == 0) {
 	    lbrace = p;
 	}
 	if (*p == '}' && lbrace && --nest == 0) {
+	    if (partial_expand && !has_dirsep) {
+		lbrace = 0;
+	    } else {
 	    rbrace = p;
 	    break;
+	}
+	}
+	if (lbrace && *p == '/' && partial_expand) {
+	    has_dirsep = 1;
 	}
 	if (*p == '\\' && escape) {
 	    if (!*++p) break;
@@ -2210,7 +2246,7 @@ push_glob(VALUE ary, VALUE str, int flags)
 #endif
 
     RB_GC_GUARD(str);
-    return ruby_brace_expand(RSTRING_PTR(str), flags,
+    return ruby_brace_expand(RSTRING_PTR(str), flags | GLOB_PARTIAL_EXPAND,
 			     push_caller, (VALUE)&args, enc);
 }
 
