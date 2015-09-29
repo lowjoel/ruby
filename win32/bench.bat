@@ -1,0 +1,2 @@
+%~dp0\usr\bin\ruby.exe %~dp0\..\benchmark\run.rb --only-ruby --ruby=%~dp0\usr\bin\ruby.exe
+rem %~dp0\usr\bin\ruby.exe %~dp0\..\benchmark\run.rb --ruby=%~dp0\usr\bin\ruby.exe --matzruby=C:\Ruby215\bin\ruby.exe
