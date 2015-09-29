@@ -1004,7 +1004,7 @@ LIBRUBYDEF = $(LIBRUBY_A:.lib=.def.lib)
 rubydefobjdir = librubydef
 !if [echo $(OBJS) $(INITOBJS) > librubydef.in && \
 	echo.RUBYDEF_OBJS = \>librubydef.mk&& \
-	sed -r "s/(\b(\w|\.|\/)+\b)/$(rubydefobjdir)\/\1 \\\n/g" librubydef.in >> librubydef.mk]
+	sed -r "s/(\b(\w|\.|\/)+\b)/$(rubydefobjdir)\/\1 \\\\\n/g" librubydef.in >> librubydef.mk]
 !endif
 !include librubydef.mk
 $(rubydefobjdir):
