@@ -5812,6 +5812,24 @@ rb_w32_uaccess(const char *path, int mode)
 	errno = EACCES;
 	return -1;
     }
+
+    // Extra check for writable paths
+    if (mode & (W_OK << 6)) {
+        if (stat.st_mode & _S_IFDIR) {
+            // Try creating a file in the directory
+            WCHAR *wpath = utf8_to_wstr(path, NULL);
+            WCHAR temp_path[MAX_PATH];
+            UINT temp_id = GetTempFileNameW(wpath, L"rb", 0, temp_path);
+            free(wpath);
+
+            if (temp_id) {
+                DeleteFileW(temp_path);
+            } else {
+                errno = EACCES;
+                return -1;
+            }
+        }
+    }
     return 0;
 }
 
