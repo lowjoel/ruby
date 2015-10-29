@@ -21,6 +21,9 @@ del !basename!.dll
 )
 nmake V=1 install test "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
 @if errorlevel 1 ( exit %errorlevel% )
+mkdir ..\usr\lib\ruby\vendor_ruby\rubygems\defaults\
+copy %~dp0\rubygems_hooks.rb  ..\usr\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
+@if errorlevel 1 ( exit %errorlevel% )
 goto :eof
 
 :miniruby
