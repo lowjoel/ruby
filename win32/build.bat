@@ -4,6 +4,7 @@ set basename=x64-msvcr120-ruby240
 
 set optflagsbase=/O2 /GL /Zo /Zi /favor:INTEL64 /arch:AVX
 set ldflagsbase=/incremental:no /debug /opt:ref /opt:icf
+set outdir=%~dp0usr
 set verbose=
 
 @mkdir %~dp0build 2>nul
@@ -22,9 +23,10 @@ del !basename!.dll
 )
 nmake !verbose! install test "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
 @if errorlevel 1 ( exit %errorlevel% )
-mkdir ..\usr\lib\ruby\vendor_ruby\rubygems\defaults\
-copy %~dp0\rubygems_hooks.rb  ..\usr\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
+mkdir !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\
+copy %~dp0\rubygems_hooks.rb  !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
 @if errorlevel 1 ( exit %errorlevel% )
+signtool sign /a /t http://time.certum.pl !outdir!\bin\*.exe !outdir!\bin\!basename!.dll
 goto :eof
 
 :miniruby
@@ -38,7 +40,7 @@ goto :link
 
 :instrument
 call :doinstrument
-copy /y !basename!.dll ..\usr\bin\!basename!.dll
+copy /y !basename!.dll !outdir!\bin\!basename!.dll
 echo Run the test scenarios you wish to optimise for using the binary in usr\bin, then rerun '%0 optimise'
 goto :eof
 
@@ -53,15 +55,15 @@ goto :eof
 del *.pgc
 echo Place all the .pgc files in the win32\usr\bin directory.
 pause
-move ..\usr\bin\!basename!*.pgc .\
-del ..\usr\bin\*.pgc
+move !outdir!\bin\!basename!*.pgc .\
+del !outdir!\bin\*.pgc
 pgomgr /merge !basename!.pgd
 del !basename!.pgc
 
 goto :link
 
 :configure
-call %~dp0configure --prefix=%~dp0usr --without-ext "dbm,gdbm,dl/callback,pty,readline,syslog,tk,tk/tkutil" --disable-install-doc --target=x64-mswin64
+call %~dp0configure --prefix=!outdir! --without-ext "dbm,gdbm,dl/callback,pty,readline,syslog,tk,tk/tkutil" --disable-install-doc --target=x64-mswin64
 call :clean
 
 :clean
