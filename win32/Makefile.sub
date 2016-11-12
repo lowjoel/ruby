@@ -1062,6 +1062,7 @@ distclean-local::
 		-$(Q)$(RMDIRS) $(arch_hdrdir:/=\)\ruby
 
 clean-ext distclean-ext realclean-ext::
+		@if exist ext ( \
 		@cd ext && for /R $(EXTS) %I in (.) \
 		do @if exist %I\Makefile ( \
 		    cd %I && ( \
@@ -1072,7 +1073,8 @@ clean-ext distclean-ext realclean-ext::
 		    $(MAKE) $(MFLAGS) $(@:-ext=) & \
 		    cd %CD% & \
 		    $(RMDIRS) %I \
-		) )
+		) ) \
+		)
 
 distclean-ext realclean-ext::
 		-$(Q)rmdir ext
