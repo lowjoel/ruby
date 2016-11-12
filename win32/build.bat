@@ -4,13 +4,18 @@ set basename=x64-msvcr120-ruby240
 
 set optflagsbase=/O2 /GL /Zo /Zi /favor:INTEL64 /arch:AVX
 set ldflagsbase=/incremental:no /debug /opt:ref /opt:icf
-set outdir=%~dp0usr
+set basedir=%~dp0
+set outdir=!basedir!usr
 set verbose=
 
-@mkdir %~dp0build 2>nul
-cd %~dp0build
+@mkdir !basedir!build 2>nul
+cd !basedir!build
 
-if "%1" neq "" ( goto %1 )
+if "%1" neq "" (
+	set next=%1
+	shift
+	goto !next!
+)
 
 :link
 @rem for the extensions
@@ -21,12 +26,15 @@ del !basename!.dll
 @if not exist !basename!.pgd (
    call :doinstrument
 )
-nmake !verbose! install test "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
+del !basename!.dll
+nmake !verbose! up install "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
 @if errorlevel 1 ( exit %errorlevel% )
 mkdir !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\
-copy %~dp0\rubygems_hooks.rb  !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
+copy !basedir!\rubygems_hooks.rb  !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
 @if errorlevel 1 ( exit %errorlevel% )
-signtool sign /a /t http://time.certum.pl !outdir!\bin\*.exe !outdir!\bin\!basename!.dll
+@if "%CI%" equ "" (
+	signtool sign /a /t http://time.certum.pl !outdir!\bin\*.exe !outdir!\bin\!basename!.dll
+)
 goto :eof
 
 :miniruby
@@ -63,7 +71,15 @@ del !basename!.pgc
 goto :link
 
 :configure
-call %~dp0configure --prefix=!outdir! --without-ext "dbm,gdbm,dl/callback,pty,readline,syslog,tk,tk/tkutil" --disable-install-doc --target=x64-mswin64
+set params=
+:configure_loop
+if [%1]==[] goto configure_afterloop
+set params=!params! %1
+shift
+goto configure_loop
+:configure_afterloop
+
+call !basedir!configure --prefix=!outdir! --without-ext "dbm,gdbm,dl/callback,pty,readline,syslog,tk,tk/tkutil" --disable-install-doc --target=x64-mswin64 !params!
 call :clean
 
 :clean
