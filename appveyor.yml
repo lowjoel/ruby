@@ -13,6 +13,7 @@ install:
   - mkdir \usr\local\bin
   - mkdir \usr\local\include
   - mkdir \usr\local\lib
+  - git submodule update --init --recursive
   - appveyor DownloadFile http://downloads.sourceforge.net/project/libpng/zlib/1.2.8/zlib128.zip
   - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\zlib zlib128.zip
   - for %%I in (c:\OpenSSL-Win64\*.dll) do mklink /h \usr\local\bin\%%~nxI %%I
@@ -20,7 +21,25 @@ build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   - win32\build.bat configure --with-opt-dir=/usr/local --with-openssl-dir=c:/OpenSSL-Win64
   - win32\build.bat link
+after_build:
+  - cd win32\usr
+  - for %%I in (c:\OpenSSL-Win64\*.dll) do mklink /h bin\%%~nxI %%I
+  - 7z a -t7z -bd -r -m0=LZMA:d128m -mx9 "..\..\%APPVEYOR_BUILD_VERSION%.7z" .
+  - cd ..\..
 test_script:
-  - pushd win32\build
+  - cd win32\build
   - nmake -l "TESTOPTS=-v -q" btest
 #  - nmake -l "TESTOPTS=-v -q" test-basic
+  - cd ..\..
+artifacts:
+  - path: '$(APPVEYOR_BUILD_VERSION).7z'
+    name: '$(APPVEYOR_BUILD_VERSION)'
+deploy:
+- provider: BinTray
+  username: lowjoel
+  api_key:
+    secure: dy8Fmj11A1YBM2CyiMn30o3URZE2bN3nkSD/W/foduHht0Y4fez/why+EijpRcVq
+  subject: lowjoel
+  repo: Ruby
+  package: ruby-vc
+  version: '$(APPVEYOR_BUILD_VERSION)'
