@@ -6,6 +6,7 @@ set optflagsbase=/O2 /GL /Zo /Zi /favor:INTEL64 /arch:AVX
 set ldflagsbase=/incremental:no /debug /opt:ref /opt:icf
 set basedir=%~dp0
 set outdir=!basedir!usr
+set verbose=
 
 @mkdir !basedir!build 2>nul
 cd !basedir!build
@@ -26,7 +27,7 @@ del !basename!.dll
    call :doinstrument
 )
 del !basename!.dll
-nmake V=1 up install "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
+nmake !verbose! up install "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
 @if errorlevel 1 ( exit %errorlevel% )
 mkdir !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\
 copy !basedir!\rubygems_hooks.rb  !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\operating_system.rb
@@ -37,7 +38,7 @@ copy !basedir!\rubygems_hooks.rb  !outdir!\lib\ruby\vendor_ruby\rubygems\default
 goto :eof
 
 :miniruby
-nmake V=1 "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG" miniruby
+nmake !verbose! "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG" miniruby
 @if errorlevel 1 ( exit %errorlevel% )
 goto :eof
 
@@ -53,7 +54,7 @@ goto :eof
 
 :doinstrument
 del *.dll
-nmake V=1 "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGINSTRUMENT"
+nmake !verbose! "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGINSTRUMENT"
 @if errorlevel 1 ( exit %errorlevel% )
 goto :eof
 
