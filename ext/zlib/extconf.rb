@@ -11,7 +11,7 @@ require 'rbconfig'
 dir_config 'zlib'
 
 
-if %w'z libz zlib1 zlib zdll zlibwapi'.find {|z| have_library(z, 'deflateReset')} and
+if pkg_config('zlib') or %w'z libz zlib1 zlib zdll zlibwapi'.find {|z| have_library(z, 'deflateReset')} and
     have_header('zlib.h') then
   have_zlib = true
 else
