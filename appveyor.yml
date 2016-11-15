@@ -16,14 +16,18 @@ install:
   - git submodule update --init --recursive
   - appveyor DownloadFile http://downloads.sourceforge.net/project/libpng/zlib/1.2.8/zlib128.zip
   - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\zlib zlib128.zip
+  - ren %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib-1.2.8 zlib
   - for %%I in (c:\OpenSSL-Win64\*.dll) do mklink /h \usr\local\bin\%%~nxI %%I
 build_script:
+  - cd %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib
+  - nmake -f win32/makefile.msc
   - cd %APPVEYOR_BUILD_FOLDER%
-  - win32\build.bat configure --with-opt-dir=/usr/local --with-openssl-dir=c:/OpenSSL-Win64
+  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir c:/OpenSSL-Win64 --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib
   - win32\build.bat link
 after_build:
   - cd win32\usr
   - for %%I in (c:\OpenSSL-Win64\*.dll) do mklink /h bin\%%~nxI %%I
+  - mklink /h bin\zlib1.dll %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib\zlib1.dll
   - 7z a -t7z -bd -r -m0=LZMA:d128m -mx9 "..\..\%APPVEYOR_BUILD_VERSION%.7z" .
   - cd ..\..
 test_script:
