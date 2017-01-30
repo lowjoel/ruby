@@ -5,6 +5,7 @@ platform:
   - x64
 environment:
   ruby_version: "24-%Platform%"
+  libffi_version: "3.2.1"
   zlib_version: "1.2.11"
   matrix:
     - vs: "120"
@@ -37,6 +38,9 @@ install:
   - appveyor DownloadFile https://zlib.net/zlib%zlib_version:.=%.zip
   - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\zlib zlib%zlib_version:.=%.zip
   - ren %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib-%zlib_version% zlib
+  - appveyor DownloadFile https://github.com/winlibs/libffi/archive/libffi-%libffi_version%.zip
+  - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\fiddle libffi-%libffi_version%.zip
+  - ren %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi-libffi-%libffi_version% libffi
   - for %%I in (%OPENSSL_DIR%\*.dll) do mklink /h \usr\local\bin\%%~nxI %%I
   - mkdir %Platform%-mswin_%vs%
   - ps: Get-ChildItem "win32" -Recurse | foreach {$_.Attributes = 'Readonly'}
@@ -44,11 +48,14 @@ install:
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib
   - nmake -f win32/makefile.msc
+  - cd %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi
+  - mklink /h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\include\ffitarget.h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\src\x86\ffitarget.h
+  - msbuild /maxcpucount /toolsversion:%vs:0=%.0 /property:PlatformToolset=v%vs% /property:Configuration=Release win32\vc%vs:0=%_x64\libffi-msvc.sln
   - cd %APPVEYOR_BUILD_FOLDER%
   - set BUILDDIR=%APPVEYOR_BUILD_FOLDER%\%Platform%-mswin_%vs%
   - set OUTDIR=%APPVEYOR_BUILD_FOLDER%\win32\usr
   - mkdir %OUTDIR%
-  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir %OPENSSL_DIR:\=/% --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib
+  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir %OPENSSL_DIR:\=/% --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-libffi-dir %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi --with-libffi-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi/win32/vc%vs:0=%_x64/x64/Release
   - cd %Platform%-mswin_%vs%
   - ..\win32\build.bat link
   - > 
