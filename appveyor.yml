@@ -1,5 +1,6 @@
 ---
-shallow_clone: true
+shallow_clone: false
+clone_depth: 1
 platform: x64
 environment:
   ruby_version: "23-x64"
@@ -17,12 +18,18 @@ install:
   - appveyor DownloadFile http://downloads.sourceforge.net/project/libpng/zlib/1.2.8/zlib128.zip
   - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\zlib zlib128.zip
   - ren %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib-1.2.8 zlib
+  - appveyor DownloadFile https://github.com/winlibs/libffi/archive/libffi-3.2.1.zip
+  - 7z x -o%APPVEYOR_BUILD_FOLDER%\ext\fiddle libffi-3.2.1.zip
+  - ren %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi-libffi-3.2.1 libffi
   - for %%I in (c:\OpenSSL-Win64\*.dll) do mklink /h \usr\local\bin\%%~nxI %%I
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%\ext\zlib\zlib
   - nmake -f win32/makefile.msc
+  - cd %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi
+  - mklink /h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\include\ffitarget.h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\src\x86\ffitarget.h
+  - msbuild /maxcpucount /toolsversion:12.0 /property:PlatformToolset=v120 /property:Configuration=Release win32\vc11_x64\libffi-msvc.sln
   - cd %APPVEYOR_BUILD_FOLDER%
-  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir c:/OpenSSL-Win64 --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib
+  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir c:/OpenSSL-Win64 --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-libffi-dir %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi --with-libffi-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi/win32/vc11_x64/x64/Release
   - win32\build.bat link
 after_build:
   - cd win32\usr
