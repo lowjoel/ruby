@@ -25,6 +25,7 @@ del !basename!.dll
 @if not exist !basename!.pgd (
    call :doinstrument
 )
+del !basename!.dll
 nmake V=1 up install "OPTFLAGS=!optflagsbase!" "LDFLAGS=!ldflagsbase! /LTCG:PGUPDATE"
 @if errorlevel 1 ( exit %errorlevel% )
 mkdir !outdir!\lib\ruby\vendor_ruby\rubygems\defaults\
