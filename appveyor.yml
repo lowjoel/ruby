@@ -27,9 +27,9 @@ build_script:
   - nmake -f win32/makefile.msc
   - cd %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi
   - mklink /h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\include\ffitarget.h %APPVEYOR_BUILD_FOLDER%\ext\fiddle\libffi\src\x86\ffitarget.h
-  - msbuild /maxcpucount /toolsversion:12.0 /property:PlatformToolset=v120 /property:Configuration=Release win32\vc11_x64\libffi-msvc.sln
+  - msbuild /maxcpucount /toolsversion:14.0 /property:PlatformToolset=v140 /property:Configuration=Release win32\vc14_x64\libffi-msvc.sln
   - cd %APPVEYOR_BUILD_FOLDER%
-  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir c:/OpenSSL-Win64 --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-libffi-dir %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi --with-libffi-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi/win32/vc11_x64/x64/Release
+  - win32\build.bat configure --with-opt-dir /usr/local --with-openssl-dir c:/OpenSSL-Win64 --with-zlib-include %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-zlib-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/zlib/zlib --with-libffi-dir %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi --with-libffi-lib %APPVEYOR_BUILD_FOLDER:\=/%/ext/fiddle/libffi/win32/vc14_x64/x64/Release
   - win32\build.bat link
 after_build:
   - cd win32\usr
