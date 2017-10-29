@@ -1,6 +1,6 @@
 @echo off
 Setlocal EnableDelayedExpansion
-set basename=x64-msvcr120-ruby250
+set basename=x64-vcruntime%vs%-ruby250
 
 set optflagsbase=/O2 /GL /Zo /Zi /favor:INTEL64 /arch:AVX
 set ldflagsbase=/incremental:no /debug /opt:ref /opt:icf

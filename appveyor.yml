@@ -8,7 +8,7 @@ environment:
   libffi_version: "3.2.1"
   zlib_version: "1.2.11"
   matrix:
-    - vs: "120"
+    - vs: "140"
 install:
   - chcp
   - SET BITS=%Platform:x86=32%
