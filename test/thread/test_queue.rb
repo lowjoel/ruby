@@ -550,6 +550,7 @@ class TestQueue < Test::Unit::TestCase
   end
 
   def test_queue_with_trap
+    return if RUBY_PLATFORM =~ /mswin|mingw|windows/
     assert_in_out_err([], <<-INPUT, %w(INT INT exit), [])
       q = Queue.new
       trap(:INT){
